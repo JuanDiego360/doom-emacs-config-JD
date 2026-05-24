@@ -19,7 +19,7 @@ Este repositorio contiene mi configuración personal y optimizada de **Doom Emac
 ### 📝 Renderizado y Visualización de Markdown
 * **Modo Lectura Nativo**: Un modo de lectura limpio directo en el buffer que oculta la sintaxis de marcado (`#`, `**`, etc.), desactiva números de línea y aplica tipografía proporcional.
 * **Tablas y Bloques con Estilo**: Formateador dinámico para tablas en Markdown con bordes Unicode finos (`│`, `─`) y etiquetas elegantes flotantes para los lenguajes de bloques de código (ej. ` elisp`).
-* **Visor Leaf Integrado**: Integración interactiva del renderizador nativo `leaf` en un panel dividido de terminal `term` a la derecha con guardado automático al instante.
+* **Visor Leaf Integrado**: Integración interactiva del renderizador nativo [leaf](https://github.com/RivoLink/leaf) en un panel dividido de terminal `term` a la derecha con guardado automático al instante.
 
 ---
 
@@ -42,6 +42,10 @@ La terminal integrada de Emacs captura todas tus teclas para enviarlas a `leaf` 
 
 ## 🛠️ Instalación y Sincronización
 
+### Requisitos Previos
+* **Leaf**: Para el visor interactivo (`SPC t L`), es necesario tener instalado el visor de línea de comandos [leaf](https://github.com/RivoLink/leaf) en tu sistema.
+
+### Configuración de Doom
 Si clonas este repositorio en una nueva máquina bajo `~/.config/doom/`, asegúrate de correr los siguientes comandos para descargar las dependencias y aplicar las configuraciones:
 
 ```bash
