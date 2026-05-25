@@ -249,3 +249,9 @@
   (setq-local indent-bars-spacing-override web-mode-markup-indent-offset)
   (indent-bars-mode 1))
 
+;; ── Autocompletado instantáneo y corrector en español para LaTeX ──
+(add-hook! 'LaTeX-mode-hook
+  (setq-local corfu-auto-prefix 1)
+  (setq ispell-local-dictionary "es")
+  (flyspell-mode 1))
+
