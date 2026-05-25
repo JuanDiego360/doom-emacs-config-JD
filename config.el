@@ -358,9 +358,6 @@
         indent-bars-highlight-current-depth
         '(:color "#7aa2f7" :blend 1.0)
 
-        ;; Método: 'on-bar resalta la barra donde está el contenido
-        indent-bars-highlight-selection-method 'on-bar
-
         ;; Sin demora en la actualización
         indent-bars-depth-update-delay 0
 
@@ -371,6 +368,22 @@
         indent-bars-display-on-blank-lines 'least
 
         ;; Empezar desde la columna 0
-        indent-bars-starting-column 0))
+        indent-bars-starting-column 0)
+
+  ;; ── Highlight basado en columna del cursor, no indentación de línea ──
+
+  (defadvice! +jd/indent-bars-highlight-at-cursor-a (force)
+    "Highlight la barra en la columna donde está el cursor,
+no la indentación de la línea (como LazyVim)."
+    :override #'indent-bars--compute-and-highlight-current-depth
+    (let* ((col (current-column))
+           (spacing (or indent-bars-spacing 1))
+           (offset (or indent-bars--offset 0))
+           (depth (if (>= col offset)
+                      (1+ (/ (- col offset) spacing))
+                    0)))
+      (when (or force (/= depth indent-bars--current-depth))
+        (setq indent-bars--current-depth depth)
+        (indent-bars--set-current-depth-highlight depth)))))
 
 
