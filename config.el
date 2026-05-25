@@ -348,31 +348,26 @@
 (after! indent-bars
   ;; ── Obligar a usar caracteres (esencial en terminal/Android) ──
   (setq indent-bars-prefer-character t
-        indent-bars-char ?│           ; barra vertical visible
+        indent-bars-char ?│
         indent-bars-no-color-char ?│
 
-        ;; Resaltar la profundidad actual
-        indent-bars-highlight-current-depth t
+        ;; Color de la barra: gris azulado, sin mezcla
+        indent-bars-color '("#3b4261" :blend 0.0)
 
-        ;; Una sola barra, sin variación por profundidad (más limpio)
+        ;; Resaltar la barra del nivel actual con color azul
+        indent-bars-highlight-current-depth
+        '(:color "#7aa2f7" :blend 1.0)
+
+        ;; Método: 'on-bar resalta la barra donde está el contenido
+        indent-bars-highlight-selection-method 'on-bar
+
+        ;; Sin demora en la actualización
+        indent-bars-depth-update-delay 0
+
+        ;; Sin variación por profundidad (más limpio)
         indent-bars-color-by-depth nil
 
-        ;; Color visible de la guía (gris sobre el fondo oscuro)
-        indent-bars-color '( :background "#3b4261"
-                             :foreground "#3b4261"
-                             :face-bg nil
-                             :blend 0.0)
-
-        ;; Color de resaltado cuando el cursor está en ese nivel
-        indent-bars-highlight-color '( :background "#7aa2f7"
-                                       :foreground "#7aa2f7"
-                                       :face-bg nil
-                                       :blend 0.0)
-
-        ;; Grosor (en caracteres no aplica, pero por si acaso)
-        indent-bars-width-frac 0.3
-
-        ;; Mostrar guías incluso en líneas en blanco (uniforme)
+        ;; Mostrar guías incluso en líneas en blanco
         indent-bars-display-on-blank-lines 'least
 
         ;; Empezar desde la columna 0
