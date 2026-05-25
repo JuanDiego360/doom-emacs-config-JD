@@ -346,30 +346,36 @@
 ;; ── Indent Guides estilo LazyVim ──
 
 (after! indent-bars
-  ;; Resaltar la profundidad actual donde está el cursor
-  (setq indent-bars-highlight-current-depth t
+  ;; ── Obligar a usar caracteres (esencial en terminal/Android) ──
+  (setq indent-bars-prefer-character t
+        indent-bars-char ?│           ; barra vertical visible
+        indent-bars-no-color-char ?│
 
-        ;; Colores ligeramente distintos por nivel de indentación
-        indent-bars-color-by-depth t
+        ;; Resaltar la profundidad actual
+        indent-bars-highlight-current-depth t
 
-        ;; Grosor de la línea (más visible que el default)
-        indent-bars-width-frac 0.25
+        ;; Una sola barra, sin variación por profundidad (más limpio)
+        indent-bars-color-by-depth nil
+
+        ;; Color visible de la guía (gris sobre el fondo oscuro)
+        indent-bars-color '( :background "#3b4261"
+                             :foreground "#3b4261"
+                             :face-bg nil
+                             :blend 0.0)
+
+        ;; Color de resaltado cuando el cursor está en ese nivel
+        indent-bars-highlight-color '( :background "#7aa2f7"
+                                       :foreground "#7aa2f7"
+                                       :face-bg nil
+                                       :blend 0.0)
+
+        ;; Grosor (en caracteres no aplica, pero por si acaso)
+        indent-bars-width-frac 0.3
 
         ;; Mostrar guías incluso en líneas en blanco (uniforme)
         indent-bars-display-on-blank-lines 'least
 
-        ;; Color base para las guías (mezclado con el fondo)
-        indent-bars-color '(font-lock-comment-face :face-bg nil :blend 0.3)
-
-        ;; Color de resaltado de la profundidad actual
-        indent-bars-highlight-color '(font-lock-keyword-face :face-bg nil :blend 0.0)
-
         ;; Empezar desde la columna 0
-        indent-bars-starting-column 0
-
-        ;; Patrón de caracteres para cuando no se pueden usar gráficos (TTY)
-        indent-bars-no-color-char ?▏
-        indent-bars-char ?▏
-        indent-bars-prefer-character nil))
+        indent-bars-starting-column 0))
 
 
