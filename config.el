@@ -191,5 +191,51 @@
     (remove-hook 'git-commit-mode-hook #'flyspell-mode)))
 
 
+;; ── Indent Guides estilo LazyVim ──
 
+(after! indent-bars
+  ;; ── Obligar a usar caracteres (esencial en terminal/Android) ──
+  (setq indent-bars-prefer-character t
+        indent-bars-char ?│
+        indent-bars-no-color-char ?│
 
+        ;; Color de la barra: gris azulado, sin mezcla
+        indent-bars-color '("#3b4261" :blend 0.0)
+
+        ;; Color de highlight (se usa en indent-bars--set-current-depth-highlight)
+        indent-bars-highlight-current-depth
+        '(:color "#7aa2f7" :blend 1.0)
+
+        ;; Sin variación por profundidad (más limpio)
+        indent-bars-color-by-depth nil
+        ;; Mostrar guías incluso en líneas en blanco
+        indent-bars-display-on-blank-lines 'least
+
+        ;; Empezar desde la columna 0
+        indent-bars-starting-column 0)
+
+  ;; ── Reemplazar highlight interno por el nuestro (basado en columna) ──
+
+  (defvar-local +jd/indent-bars--cursor-depth -1)
+
+  (defun +jd/indent-bars-cursor-highlight ()
+    (when indent-bars-mode
+      (let* ((col (current-column))
+             (spacing (or indent-bars-spacing 1))
+             (offset (or indent-bars--offset 0))
+             (depth (if (>= col offset)
+                        (1+ (/ (- col offset) spacing))
+                      0)))
+        (unless (= depth +jd/indent-bars--cursor-depth)
+          (setq +jd/indent-bars--cursor-depth depth)
+          (indent-bars--set-current-depth-highlight depth)))))
+
+  (defun +jd/indent-bars-after-setup ()
+    "Después de indent-bars-setup: quita highlight interno, pone el nuestro."
+    (remove-hook 'post-command-hook
+                 #'indent-bars--update-current-depth-highlight t)
+    (add-hook 'post-command-hook
+              #'+jd/indent-bars-cursor-highlight nil t)
+    (+jd/indent-bars-cursor-highlight))
+
+  (advice-add #'indent-bars-setup :after #'+jd/indent-bars-after-setup))
