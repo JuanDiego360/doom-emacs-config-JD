@@ -239,3 +239,13 @@
     (+jd/indent-bars-cursor-highlight))
 
   (advice-add #'indent-bars-setup :after #'+jd/indent-bars-after-setup))
+
+;; ── Forzar guías de indentación en archivos HTML y Web con el espaciado correcto ──
+(add-hook! '(html-mode-hook mhtml-mode-hook)
+  (setq-local indent-bars-spacing-override sgml-basic-offset)
+  (indent-bars-mode 1))
+
+(add-hook! 'web-mode-hook
+  (setq-local indent-bars-spacing-override web-mode-markup-indent-offset)
+  (indent-bars-mode 1))
+
