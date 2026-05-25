@@ -343,3 +343,33 @@
         "t L" #'jd/markdown-open-in-leaf))
 
 
+;; ── Indent Guides estilo LazyVim ──
+
+(after! indent-bars
+  ;; Resaltar la profundidad actual donde está el cursor
+  (setq indent-bars-highlight-current-depth t
+
+        ;; Colores ligeramente distintos por nivel de indentación
+        indent-bars-color-by-depth t
+
+        ;; Grosor de la línea (más visible que el default)
+        indent-bars-width-frac 0.25
+
+        ;; Mostrar guías incluso en líneas en blanco (uniforme)
+        indent-bars-display-on-blank-lines 'least
+
+        ;; Color base para las guías (mezclado con el fondo)
+        indent-bars-color '(font-lock-comment-face :face-bg nil :blend 0.3)
+
+        ;; Color de resaltado de la profundidad actual
+        indent-bars-highlight-color '(font-lock-keyword-face :face-bg nil :blend 0.0)
+
+        ;; Empezar desde la columna 0
+        indent-bars-starting-column 0
+
+        ;; Patrón de caracteres para cuando no se pueden usar gráficos (TTY)
+        indent-bars-no-color-char ?▏
+        indent-bars-char ?▏
+        indent-bars-prefer-character nil))
+
+
