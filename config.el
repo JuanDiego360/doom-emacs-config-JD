@@ -354,12 +354,9 @@
         ;; Color de la barra: gris azulado, sin mezcla
         indent-bars-color '("#3b4261" :blend 0.0)
 
-        ;; Resaltar la barra del nivel actual con color azul
+        ;; Color de highlight (se usa en indent-bars--set-current-depth-highlight)
         indent-bars-highlight-current-depth
         '(:color "#7aa2f7" :blend 1.0)
-
-        ;; Sin demora en la actualización
-        indent-bars-depth-update-delay 0
 
         ;; Sin variación por profundidad (más limpio)
         indent-bars-color-by-depth nil
@@ -370,20 +367,30 @@
         ;; Empezar desde la columna 0
         indent-bars-starting-column 0)
 
-  ;; ── Highlight basado en columna del cursor, no indentación de línea ──
+  ;; ── Reemplazar highlight interno por el nuestro (basado en columna) ──
 
-  (defadvice! +jd/indent-bars-highlight-at-cursor-a (force)
-    "Highlight la barra en la columna donde está el cursor,
-no la indentación de la línea (como LazyVim)."
-    :override #'indent-bars--compute-and-highlight-current-depth
-    (let* ((col (current-column))
-           (spacing (or indent-bars-spacing 1))
-           (offset (or indent-bars--offset 0))
-           (depth (if (>= col offset)
-                      (1+ (/ (- col offset) spacing))
-                    0)))
-      (when (or force (/= depth indent-bars--current-depth))
-        (setq indent-bars--current-depth depth)
-        (indent-bars--set-current-depth-highlight depth)))))
+  (defvar-local +jd/indent-bars--cursor-depth -1)
+
+  (defun +jd/indent-bars-cursor-highlight ()
+    (when indent-bars-mode
+      (let* ((col (current-column))
+             (spacing (or indent-bars-spacing 1))
+             (offset (or indent-bars--offset 0))
+             (depth (if (>= col offset)
+                        (1+ (/ (- col offset) spacing))
+                      0)))
+        (unless (= depth +jd/indent-bars--cursor-depth)
+          (setq +jd/indent-bars--cursor-depth depth)
+          (indent-bars--set-current-depth-highlight depth)))))
+
+  (defun +jd/indent-bars-after-setup ()
+    "Después de indent-bars-setup: quita highlight interno, pone el nuestro."
+    (remove-hook 'post-command-hook
+                 #'indent-bars--update-current-depth-highlight t)
+    (add-hook 'post-command-hook
+              #'+jd/indent-bars-cursor-highlight nil t)
+    (+jd/indent-bars-cursor-highlight))
+
+  (advice-add #'indent-bars-setup :after #'+jd/indent-bars-after-setup))
 
 
