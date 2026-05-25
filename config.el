@@ -32,7 +32,7 @@
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
-(setq doom-theme 'doom-tokyo-night)
+(setq doom-theme 'doom-one)
 
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relative line numbers, set this to `relative'.
@@ -41,84 +41,6 @@
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
 (setq org-directory "~/org/")
-
-;; ── Modeline: mostrar hora y estado git detallado ──
-
-;; Variables y función auxiliar (no requieren doom-modeline cargado)
-(defvar-local jd/git-diff-cache nil
-  "Cached git diff stats: (files . (added . removed)) or nil.")
-(defvar-local jd/git-diff-cache-buffer nil
-  "Buffer content hash for cache invalidation.")
-(defvar-local jd/git-diff-cache-time 0
-  "Time when the cache was last updated.")
-
-(defun jd/get-git-diff-stats ()
-  "Return string like '+5 -3 ~2' with lines added/removed + files modified."
-  (when (and buffer-file-name
-             (executable-find "git")
-             (locate-dominating-file default-directory ".git"))
-    (let* ((buffer-hash (buffer-hash))
-           (now (float-time)))
-      (unless (and jd/git-diff-cache
-                   (equal jd/git-diff-cache-buffer buffer-hash)
-                   (< (- now jd/git-diff-cache-time) 3))
-        (setq jd/git-diff-cache
-              (with-temp-buffer
-                (when (zerop (call-process "git" nil t nil
-                                           "diff" "--shortstat" "HEAD"))
-                  (goto-char (point-min))
-                  (let ((files 0) (added 0) (removed 0))
-                    (when (re-search-forward
-                           "\\([0-9]+\\) files? changed" nil t)
-                      (setq files (string-to-number (match-string 1))))
-                    (goto-char (point-min))
-                    (when (re-search-forward
-                           "\\([0-9]+\\) insertion" nil t)
-                      (setq added (string-to-number (match-string 1))))
-                    (goto-char (point-min))
-                    (when (re-search-forward
-                           "\\([0-9]+\\) deletion" nil t)
-                      (setq removed (string-to-number (match-string 1))))
-                    (cons files (cons added removed)))))
-              jd/git-diff-cache-buffer buffer-hash
-              jd/git-diff-cache-time now)))
-    (when jd/git-diff-cache
-      (let ((files (car jd/git-diff-cache))
-            (added (cadr jd/git-diff-cache))
-            (removed (cddr jd/git-diff-cache)))
-        (unless (and (zerop files) (zerop added) (zerop removed))
-          (concat
-           (propertize (format "+%d" added) 'face 'doom-modeline-info)
-           " "
-           (propertize (format "-%d" removed) 'face 'doom-modeline-urgent)
-           " "
-           (propertize (format "~%d" files) 'face 'doom-modeline-warning)))))))
-
-;; Configuración de doom-modeline (se ejecuta cuando el paquete carga)
-(after! doom-modeline
-  ;; ── Hora ──
-  (display-time-mode 1)
-  (setq doom-modeline-time t
-        doom-modeline-time-icon t
-        doom-modeline-time-live t)
-
-  ;; ── VCS (rama de git) ──
-  (setq doom-modeline-vcs t)
-
-  ;; ── Iconos y estilo ──
-  (setq doom-modeline-icon t
-        doom-modeline-bar-width 3
-        doom-modeline-height 25
-        doom-modeline-buffer-state-icon t
-        doom-modeline-buffer-encoding t
-        doom-modeline-github nil)
-
-  ;; ── Segmento personalizado de git (se añade después de la rama) ──
-  (doom-modeline-def-segment jd/vcs-diff-stats
-    "Muestra +añadidas -quitadas ~archivos modificados."
-    (jd/get-git-diff-stats))
-
-  (doom-modeline-add-segment 'jd/vcs-diff-stats 'vcs :after 'main))
 
 
 ;; Whenever you reconfigure a package, make sure to wrap your config in an
@@ -152,143 +74,122 @@
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
 
+;; Configure Ediff to show only two columns side-by-side and keep control panel in the same frame
+(setq ediff-split-window-function 'split-window-horizontally
+      ediff-window-setup-function 'ediff-setup-windows-plain
+      magit-ediff-dwim-show-on-hunks t)
 
-;; ── Configuración para Markdown (Modo Lectura / Renderizado) ──
+;; Git diff statistics in Doom Modeline (like LazyVim)
+(defun my-diff-hl-stats ()
+  "Get the number of added, modified, and deleted lines/hunks from diff-hl or git-gutter."
+  (cond
+   ((and (bound-and-true-p diff-hl-mode)
+         (buffer-file-name))
+    (let ((added 0)
+          (modified 0)
+          (deleted 0))
+      (dolist (ov (overlays-in (point-min) (point-max)))
+        (when (overlay-get ov 'diff-hl-hunk)
+          (let ((type (overlay-get ov 'diff-hl-hunk-type)))
+            (cond
+             ((eq type 'insert)
+              (setq added (+ added (count-lines (overlay-start ov) (overlay-end ov)))))
+             ((eq type 'change)
+              (setq modified (+ modified (count-lines (overlay-start ov) (overlay-end ov)))))
+             ((eq type 'delete)
+              (setq deleted (+ deleted 1)))))))
+      (list added modified deleted)))
+   ((and (bound-and-true-p git-gutter-mode)
+         (buffer-file-name))
+    (let ((stats (git-gutter:statistic)))
+      (if stats
+          (list (car stats) 0 (cdr stats))
+        '(0 0 0))))
+   (t '(0 0 0))))
 
-(use-package! valign
-  :defer t
-  :config
-  (setq valign-fancy-bar t))
+;; Enable and configure clock
+(setq display-time-format "%H:%M"
+      display-time-default-load-average nil)
+(display-time-mode 1)
 
-(use-package! mixed-pitch
-  :defer t
-  :config
-  ;; Asegurar que las fuentes fijas incluyan código y tablas en markdown
-  (after! markdown-mode
-    (add-to-list 'mixed-pitch-fixed-pitch-faces 'markdown-code-face)
-    (add-to-list 'mixed-pitch-fixed-pitch-faces 'markdown-inline-code-face)
-    (add-to-list 'mixed-pitch-fixed-pitch-faces 'markdown-table-face)))
+(after! doom-modeline
+  (setq doom-modeline-time-icon t)
 
-(after! markdown-mode
-  ;; Estilos de cabeceras proporcionales y legibles
-  (custom-set-faces!
-    '(markdown-header-face-1 :height 1.45 :weight bold :inherit variable-pitch)
-    '(markdown-header-face-2 :height 1.3 :weight bold :inherit variable-pitch)
-    '(markdown-header-face-3 :height 1.18 :weight bold :inherit variable-pitch)
-    '(markdown-header-face-4 :height 1.12 :weight bold :inherit variable-pitch)
-    '(markdown-header-face-5 :height 1.08 :weight bold :inherit variable-pitch)
-    '(markdown-header-face-6 :height 1.04 :weight bold :inherit variable-pitch)
-    ;; Estilo tipo KBD / Caja para código en línea
-    `(markdown-inline-code-face
-      :background "#292e42" ; fondo discreto de Tokyo Night
-      :foreground "#ff9e64" ; naranja suave
-      :weight normal
-      :inherit fixed-pitch
-      :box (:line-width (3 . -1) :color "#292e42" :style nil)))
+  (doom-modeline-def-segment my-diff-hl-stats
+    "Display git diff statistics (additions, modifications, deletions) in modeline."
+    (let* ((stats (my-diff-hl-stats))
+           (added (nth 0 stats))
+           (modified (nth 1 stats))
+           (deleted (nth 2 stats)))
+      (when (> (+ added modified deleted) 0)
+        (concat
+         (when (> added 0)
+           (propertize (format "   %d" added) 'face (if (facep 'diff-hl-insert) 'diff-hl-insert 'success)))
+         (when (> modified 0)
+           (propertize (format "   %d" modified) 'face (if (facep 'diff-hl-change) 'diff-hl-change 'warning)))
+         (when (> deleted 0)
+           (propertize (format "   %d" deleted) 'face (if (facep 'diff-hl-delete) 'diff-hl-delete 'error)))))))
 
-  ;; Palabras clave de font-lock para embellecer las tablas y bloques de código al estilo de Leaf / Glow
-  (defvar jd/markdown-table-prettify-keywords
-    '(;; 1. Forzar fuente fija (fixed-pitch) en toda la línea de la tabla para alinearla
-      ("^[ \t]*\\(|.*|\\)$" 0 'fixed-pitch append)
-      ;; 2. Convertir barras verticales '|' en '│' y hacerlas visibles (anulando markdown-hide-markup)
-      ("^[ \t]*\\(|\\)\\(.*\\)"
-       (1 '(face fixed-pitch invisible nil display "│") prepend)
-       ("[ \t]*\\(|\\)[ \t]*" (save-excursion (goto-char (match-beginning 0)) (line-end-position)) nil
-        (1 '(face fixed-pitch invisible nil display "│") prepend)))
-      ;; 3. Convertir guiones '-' y ':' de la fila divisoria en una línea continua '─'
-      ("^[ \t]*|\\([-:| \t]+\\)$"
-       ("[-:]" (save-excursion (goto-char (match-beginning 0)) (line-end-position)) nil
-        (0 '(face fixed-pitch display "─") prepend)))
-      ;; 4. Mostrar el lenguaje del bloque de código como una etiqueta elegante y ocultar las comillas ```
-      ("^[ \t]*\\(```\\)\\([a-zA-Z0-9-+#]+\\)"
-       (1 '(face nil invisible nil display "    ") prepend)
-       (2 '(face (:background "#2e3047" :foreground "#7aa2f7" :weight bold :box (:line-width (4 . -1) :color "#2e3047")) invisible nil) prepend))
-      ;; 5. Convertir comillas de cierre del bloque de código en una línea divisoria inferior discreta
-      ("^[ \t]*\\(```\\)$"
-       (1 '(face (:foreground "#2e3047") invisible nil display "  ──────────────────────────────────────────") prepend)))
-    "Keywords de font-lock para embellecer visualmente tablas y bloques de código en modo lectura.")
+  (doom-modeline-def-modeline 'main
+    '(eldoc bar window-state workspace-name window-number modals matches follow buffer-info remote-host buffer-position word-count parrot selection-info)
+    '(compilation objed-state misc-info project-name persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs my-diff-hl-stats check time)))
 
-  ;; Definición del minor mode para el modo lectura/renderizado
-  (define-minor-mode jd/markdown-read-mode
-    "Modo menor para leer y renderizar Markdown de forma limpia."
-    :init-value nil
-    :lighter " MD-Read"
-    :keymap nil
-    (if jd/markdown-read-mode
-        (progn
-          ;; 1. Ocultar marcado (forzar activación con 1)
-          (markdown-toggle-markup-hiding 1)
-          ;; 2. Activar mixed-pitch para fuente proporcional
-          (mixed-pitch-mode 1)
-          ;; 3. Activar el embellecimiento visual de tablas y bloques estilo Leaf
-          (font-lock-add-keywords nil jd/markdown-table-prettify-keywords)
-          ;; 4. Ocultar números de línea
-          (display-line-numbers-mode -1))
-      ;; Al desactivar:
-      ;; 1. Mostrar marcado de nuevo (forzar desactivación con -1)
-      (markdown-toggle-markup-hiding -1)
-      ;; 2. Desactivar mixed-pitch
-      (mixed-pitch-mode -1)
-      ;; 3. Desactivar el embellecimiento visual de tablas y bloques de código
-      (font-lock-remove-keywords nil jd/markdown-table-prettify-keywords)
-      ;; 4. Restaurar números de línea
-      (display-line-numbers-mode 1))
-    ;; Forzar el reinicio completo de font-lock para aplicar y renderizar los cambios en caliente
-    (font-lock-mode -1)
-    (font-lock-mode 1))
+;; Customize Magit diff colors for better readability/contrast
+(custom-set-faces!
+  '(magit-diff-added :background "#1d3220" :foreground "#a6e3a1")
+  '(magit-diff-added-highlight :background "#29462c" :foreground "#c5f7c1" :weight bold)
+  '(magit-diff-removed :background "#3a1d20" :foreground "#f38ba8")
+  '(magit-diff-removed-highlight :background "#50292c" :foreground "#ffb3b8" :weight bold)
+  '(ediff-current-diff-A :background "#3a1d20" :foreground "#f38ba8")
+  '(ediff-current-diff-B :background "#1d3220" :foreground "#a6e3a1")
+  '(ediff-current-diff-C :background "#1e293b" :foreground "#7dd3fc")
+  '(ediff-current-diff-Ancestor :background "#2e2a1d" :foreground "#fde047")
+  '(ediff-fine-diff-A :background "#5f2e32" :foreground "#ffccd0" :weight bold)
+  '(ediff-fine-diff-B :background "#2b4c2f" :foreground "#d1ffd7" :weight bold)
+  '(ediff-fine-diff-C :background "#2e405a" :foreground "#c8e6ff" :weight bold)
+  '(orderless-match-face-0 :foreground "#51afef" :background nil :weight bold)
+  '(orderless-match-face-1 :foreground "#c678dd" :background nil :weight bold)
+  '(orderless-match-face-2 :foreground "#98be65" :background nil :weight bold)
+  '(orderless-match-face-3 :foreground "#ecbe7b" :background nil :weight bold)
+  '(completions-common-part :foreground "#51afef" :background nil :weight bold)
+  '(completions-first-difference :foreground "#c678dd" :background nil :weight bold))
 
-  ;; Mapeo de tecla SPC t m dentro de markdown-mode
-  (map! :map markdown-mode-map
-        :leader
-        :desc "Toggle Markdown Render"
-        "t m" #'jd/markdown-read-mode)
+;; Integration with Windows Clipboard in WSL terminal
+(when (and (eq system-type 'gnu/linux)
+           (string-match-p "microsoft" (downcase (shell-command-to-string "uname -a")))
+           (not (display-graphic-p)))
+  (require 'subr-x)
+  (defun wsl-copy (text)
+    (when (and text (not (string-empty-p text)))
+      (let ((coding-system-for-write 'utf-8))
+        (with-temp-buffer
+          (insert text)
+          (call-process-region (point-min) (point-max)
+                               "/init" nil nil nil
+                               "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
+                               "-NoProfile" "-Command" "Set-Clipboard -Value ($input | Out-String).TrimEnd()")))))
+  (defun wsl-paste ()
+    (let ((coding-system-for-read 'utf-8))
+      (with-temp-buffer
+        (call-process "/init" nil t nil
+                      "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
+                      "-NoProfile" "-Command" "Get-Clipboard")
+        (string-trim-right (buffer-string)))))
+  (setq interprogram-cut-function 'wsl-copy
+        interprogram-paste-function 'wsl-paste))
 
-  ;; Función para abrir el archivo en term nativo con Leaf a la derecha
-  (defun jd/markdown-open-in-leaf ()
-    "Abre el archivo Markdown actual en un panel term (nativo) a la derecha ejecutando 'leaf'."
-    (interactive)
-    (require 'term)
-    (unless (derived-mode-p 'markdown-mode)
-      (user-error "Este comando solo se puede usar en buffers de Markdown"))
-    (unless buffer-file-name
-      (user-error "El buffer actual no está asociado a ningún archivo en el disco"))
-    ;; Guardar automáticamente el archivo si tiene cambios para que Leaf muestre lo más reciente
-    (when (buffer-modified-p)
-      (save-buffer))
-    (let* ((file-path (expand-file-name buffer-file-name))
-           (buffer-name (format "leaf: %s" (file-name-nondirectory file-path)))
-           (leaf-buffer (get-buffer (format "*%s*" buffer-name)))
-           (leaf-window (and leaf-buffer (get-buffer-window leaf-buffer))))
-      (if leaf-window
-          ;; Si la ventana de Leaf ya está visible, la cerramos (Toggle Off)
-          (delete-window leaf-window)
-        ;; Si no está visible, dividimos la ventana a la derecha y abrimos Leaf
-        (let ((new-window (split-window-right)))
-          (select-window new-window)
-          (if (and leaf-buffer (buffer-live-p leaf-buffer))
-              ;; Si el buffer de Leaf ya existe pero no estaba visible, lo matamos y lo recreamos para refrescar
-              (progn
-                (kill-buffer leaf-buffer)
-                (let ((leaf-path (executable-find "leaf")))
-                  (unless leaf-path
-                    (user-error "No se encontró el comando 'leaf' en tu sistema"))
-                  (let ((term-buffer (make-term buffer-name leaf-path nil file-path)))
-                    (switch-to-buffer term-buffer)
-                    (term-mode)
-                    (term-char-mode))))
-            ;; Si el buffer no existe, lo creamos
-            (let ((leaf-path (executable-find "leaf")))
-              (unless leaf-path
-                (user-error "No se encontró el comando 'leaf' en tu sistema"))
-              (let ((term-buffer (make-term buffer-name leaf-path nil file-path)))
-                (switch-to-buffer term-buffer)
-                (term-mode)
-                (term-char-mode))))))))
+;; Disable eglot-booster if emacs-lsp-booster is not installed
+(after! eglot-booster
+  (unless (executable-find "emacs-lsp-booster")
+    (eglot-booster-mode -1)))
 
-  ;; Mapeo de tecla SPC t L dentro de markdown-mode para abrir con Leaf
-  (map! :map markdown-mode-map
-        :leader
-        :desc "Toggle Leaf Viewer (term)"
-        "t L" #'jd/markdown-open-in-leaf))
+;; Disable flyspell in git commit buffers if no spell checker is installed
+(after! flyspell
+  (unless (or (executable-find "ispell")
+              (executable-find "aspell")
+              (executable-find "hunspell"))
+    (remove-hook 'git-commit-mode-hook #'flyspell-mode)))
+
+
 
 
