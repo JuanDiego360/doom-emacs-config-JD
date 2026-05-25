@@ -6,8 +6,59 @@
 
 ;; Some functionality uses this to identify you, e.g. GPG configuration, email
 ;; clients, file templates and snippets. It is optional.
-;; (setq user-full-name "John Doe"
+;;(setq user-full-name "John Doe"
 ;;       user-mail-address "john@doe.com")
+
+;; ── CSV: columnas coloreadas ──
+;; Solución con font-lock (rainbow-csv no está en MELPA)
+
+(defvar-local jd/csv--col 0
+  "Columna actual durante el font-lock de csv.")
+
+(defvar jd/csv-colors
+  ["#f7768e" "#7dcfff" "#e0af68" "#9ece6a" "#bb9af7"
+   "#73daca" "#ff9e64" "#2ac3de" "#c0caf5"]
+  "Colores cíclicos para las columnas CSV (paleta Tokyo Night).")
+
+;; Crear las caras (faces) una sola vez
+(dotimes (i (length jd/csv-colors))
+  (let ((face (intern (format "jd/csv-c%d" i)))
+        (color (aref jd/csv-colors i)))
+    (unless (facep face)
+      (make-face face)
+      (set-face-foreground face color))))
+
+(defun jd/csv-matcher (limit)
+  "Busca campos CSV, reinicia contador de columna al inicio de línea."
+  (let ((sep (or (and (boundp 'csv-separator) csv-separator) ","))
+        (found nil))
+    (while (and (not found)
+                (re-search-forward (format "[^%s\n]+" sep) limit t))
+      ;; ¿Es el primer campo de la línea? → reinicia contador
+      (save-excursion
+        (goto-char (match-beginning 0))
+        (skip-chars-backward " \t")
+        (when (bolp)
+          (setq jd/csv--col 0)))
+      ;; Guarda índice y avanza
+      (setq jd/csv--current-col jd/csv--col)
+      (cl-incf jd/csv--col)
+      (setq found t))
+    found))
+
+(defun jd/csv-face-func ()
+  "Devuelve la cara según la columna actual."
+  (intern (format "jd/csv-c%d"
+                  (mod jd/csv--current-col (length jd/csv-colors)))))
+
+(use-package! csv-mode
+  :hook (csv-mode . csv-align-mode)     ; alinea columnas
+  :config
+  ;; Separadores comunes
+  (setq csv-separators '("," ";" "|" "\t"))
+  ;; Keywords de font-lock: un color por columna
+  (font-lock-add-keywords 'csv-mode
+    '((jd/csv-matcher . (0 (jd/csv-face-func) prepend)))))
 
 ;; Doom exposes five (optional) variables for controlling fonts in Doom:
 ;;

@@ -55,3 +55,4 @@
 
 (package! valign)
 (package! mixed-pitch)
+;; rainbow-csv no está disponible en MELPA; uso font-lock personalizado en config.el
