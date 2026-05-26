@@ -3,6 +3,16 @@
 ;; Place your private configuration here! Remember, you do not need to run 'doom
 ;; sync' after modifying this file!
 
+;; --- Autocompletado estilo LazyVim ---
+
+;; Keywords del lenguaje en shell scripts (sh/zsh/bash)
+(add-hook! '(sh-mode-hook bash-ts-mode-hook)
+  (add-hook 'completion-at-point-functions #'cape-keyword 10 t))
+
+;; Completado de rutas de archivos (como en LazyVim)
+(add-hook! 'prog-mode-hook
+  (add-hook 'completion-at-point-functions #'cape-file 10 t))
+
 
 ;; Some functionality uses this to identify you, e.g. GPG configuration, email
 ;; clients, file templates and snippets. It is optional.
