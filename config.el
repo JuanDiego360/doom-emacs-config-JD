@@ -292,3 +292,25 @@
         "t L" #'jd/markdown-open-in-leaf))
 
 
+;; ── Configuración de colores para scripts Shell (.zshrc, .zshrc_custom) ──
+
+;; Asociar cualquier variante de .zshrc (como .zshrc_custom) a sh-mode
+(add-to-list 'auto-mode-alist '("\\.zshrc.*\\'" . sh-mode))
+
+(after! sh-script
+  ;; Añadir reglas de resaltado personalizadas para que las estructuras de control
+  ;; como if, then, else, fi, for, while, etc., resalten en un color llamativo y
+  ;; no se vean planas. Usamos 'font-lock-warning-face' (naranja/amarillo vibrante) para que resalten.
+  (font-lock-add-keywords 'sh-mode
+    '(("\\<\\(if\\|then\\|elif\\|else\\|fi\\|for\\|in\\|do\\|done\\|while\\|until\\|case\\|esac\\)\\>"
+       0 'font-lock-warning-face prepend))))
+
+
+;; ── Ajuste de línea automático (Evitar Scroll Horizontal) ──
+
+;; Activar el ajuste de línea automático (soft wrap) de forma global
+(global-visual-line-mode 1)
+
+
+
+
