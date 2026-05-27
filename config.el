@@ -428,7 +428,7 @@ en la raíz del proyecto y lo activa antes de que inicie el autocompletado."
 ;; Desactiva los avisos de "missing type stubs" y ajusta el nivel de chequeo a "standard"
 ;; para evitar alertas ruidosas de librerías de terceros (como numpy, matplotlib, etc.)
 (defvar +jd/basedpyright-analysis-settings
-  '(:typeCheckingMode "standard"
+  '(:typeCheckingMode "off"
     :reportMissingTypeStubs "none"
     :reportUnknownMemberType "none"
     :reportUnknownVariableType "none"
@@ -461,7 +461,9 @@ en la raíz del proyecto y lo activa antes de que inicie el autocompletado."
 
 (after! eglot
   ;; Desactivar logging de eventos en eglot para evitar sobrecarga de CPU y memoria
-  (setf (plist-get eglot-events-buffer-config :size) 0))
+  (setf (plist-get eglot-events-buffer-config :size) 0)
+  ;; Desactivar inlay hints (anotaciones virtuales de tipo como NDArray[float64] dentro del código)
+  (add-to-list 'eglot-ignored-server-capabilities :inlayHintProvider))
 
 ;; ── Integración con emacs-lsp-booster ──
 (use-package! eglot-booster
