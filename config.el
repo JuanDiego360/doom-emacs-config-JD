@@ -426,31 +426,31 @@ en la raíz del proyecto y lo activa antes de que inicie el autocompletado."
 ;; ── Configuración de Basedpyright y Pyright en Eglot ──
 ;; Desactiva los avisos de "missing type stubs" y ajusta el nivel de chequeo a "standard"
 ;; para evitar alertas ruidosas de librerías de terceros (como numpy, matplotlib, etc.)
+(defvar +jd/basedpyright-analysis-settings
+  '(:typeCheckingMode "standard"
+    :reportMissingTypeStubs "none"
+    :reportUnknownMemberType "none"
+    :reportUnknownVariableType "none"
+    :reportUnknownArgumentType "none"
+    :reportUnknownParameterType "none"
+    :reportAttributeAccessIssue "none"
+    :reportUnusedCallResult "none"
+    :diagnosticSeverityOverrides (:reportMissingTypeStubs "none"
+                                  :reportUnknownMemberType "none"
+                                  :reportUnknownVariableType "none"
+                                  :reportUnknownArgumentType "none"
+                                  :reportUnknownParameterType "none"
+                                  :reportAttributeAccessIssue "none"
+                                  :reportUnusedCallResult "none"))
+  "Common Basedpyright/Pyright analysis settings.")
+
 (setq-default eglot-workspace-configuration
-              '(:basedpyright (:analysis (:typeCheckingMode "standard"
-                                          :reportMissingTypeStubs "none"
-                                          :reportUnknownMemberType "none"
-                                          :reportUnknownVariableType "none"
-                                          :reportUnknownArgumentType "none"
-                                          :reportUnknownParameterType "none"
-                                          :reportAttributeAccessIssue "none"
-                                          :reportUnusedCallResult "none"))
-                :pyright (:analysis (:typeCheckingMode "standard"
-                                     :reportMissingTypeStubs "none"
-                                     :reportUnknownMemberType "none"
-                                     :reportUnknownVariableType "none"
-                                     :reportUnknownArgumentType "none"
-                                     :reportUnknownParameterType "none"
-                                     :reportAttributeAccessIssue "none"
-                                     :reportUnusedCallResult "none"))
-                :python (:analysis (:typeCheckingMode "standard"
-                                    :reportMissingTypeStubs "none"
-                                    :reportUnknownMemberType "none"
-                                    :reportUnknownVariableType "none"
-                                    :reportUnknownArgumentType "none"
-                                    :reportUnknownParameterType "none"
-                                    :reportAttributeAccessIssue "none"
-                                    :reportUnusedCallResult "none"))))
+              `(:basedpyright.analysis ,+jd/basedpyright-analysis-settings
+                :python.analysis ,+jd/basedpyright-analysis-settings
+                :pyright.analysis ,+jd/basedpyright-analysis-settings
+                :basedpyright (:analysis ,+jd/basedpyright-analysis-settings)
+                :pyright (:analysis ,+jd/basedpyright-analysis-settings)
+                :python (:analysis ,+jd/basedpyright-analysis-settings)))
 
 
 
