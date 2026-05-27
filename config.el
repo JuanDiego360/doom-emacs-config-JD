@@ -471,6 +471,10 @@ en la raíz del proyecto y lo activa antes de que inicie el autocompletado."
   :config
   (eglot-booster-mode 1))
 
+;; ── Configuración de Vterm con libvterm vendada para evitar crashes ABI ──
+(setq vterm-module-cmake-args "-DUSE_SYSTEM_LIBVTERM=no")
+
+
 
 
 
