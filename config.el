@@ -328,21 +328,19 @@
 (defun +jd/cape-file ()
   "Versión robusta de `cape-file' que funciona en cualquier major-mode sin importar la tabla de sintaxis."
   (interactive)
-  (let* ((orig-bounds (symbol-function 'cape--bounds))
-         (new-bounds (lambda (thing)
-                       (let ((bounds (funcall orig-bounds thing)))
-                         (if (and bounds (> (cdr bounds) (car bounds)))
-                             bounds
-                           (save-excursion
-                             (let ((end (point)))
-                               (skip-chars-backward "^ \t\n\"'")
-                               (cons (point) end)))))))
-         (res nil))
-    (fset 'cape--bounds new-bounds)
-    (unwind-protect
-        (setq res (cape-file))
-      (fset 'cape--bounds orig-bounds))
-    res))
+  (require 'cl-lib)
+  (require 'cape)
+  (cl-letf* ((orig-bounds (symbol-function 'cape--bounds))
+             ((symbol-function 'cape--bounds)
+              (lambda (thing)
+                (let ((bounds (funcall orig-bounds thing)))
+                  (if (and bounds (> (cdr bounds) (car bounds)))
+                      bounds
+                    (save-excursion
+                      (let ((end (point)))
+                        (skip-chars-backward "^ \t\n\"'")
+                        (cons (point) end))))))))
+    (cape-file)))
 
 ;; Ganchos seguros para completado LSP
 (defun +jd/safe-eglot-capf ()
@@ -368,25 +366,35 @@
 
 ;; Unificar completado de LSP (Eglot/LSP-mode) con completado de archivos y palabras locales (dabbrev)
 (defun +jd/eglot-capf-setup ()
-  (when eglot-managed-mode
+  (when (bound-and-true-p eglot--managed-mode)
     (require 'cape)
     (setq-local completion-at-point-functions
-                (list (cape-capf-super
-                       #'+jd/safe-eglot-capf
-                       #'+jd/cape-file
-                       #'cape-dabbrev)))))
+                (list #'+jd/safe-eglot-capf
+                      #'+jd/cape-file
+                      #'cape-dabbrev))))
 
 (defun +jd/lsp-capf-setup ()
   (when (bound-and-true-p lsp-mode)
     (require 'cape)
     (setq-local completion-at-point-functions
-                (list (cape-capf-super
-                       #'+jd/safe-lsp-capf
-                       #'+jd/cape-file
-                       #'cape-dabbrev)))))
+                (list #'+jd/safe-lsp-capf
+                      #'+jd/cape-file
+                      #'cape-dabbrev))))
 
 (add-hook 'eglot-managed-mode-hook #'+jd/eglot-capf-setup)
 (add-hook 'lsp-managed-mode-hook #'+jd/lsp-capf-setup)
+
+;; Evitar que Eglot intente autoiniciar si el archivo está en la raíz de la carpeta Home (~/)
+;; ya que Basedpyright intentará escanear de forma recursiva toda la carpeta Home y congelará Emacs.
+(defun +jd/eglot-ensure-safe-advice (orig-fun &rest args)
+  "Prevent eglot-ensure from running if the project root is the home directory."
+  (let* ((proj (project-current))
+         (proj-root (if proj (project-root proj) default-directory)))
+    (unless (string-equal (directory-file-name (expand-file-name proj-root))
+                          (directory-file-name (expand-file-name "~/")))
+      (apply orig-fun args))))
+
+(advice-add 'eglot-ensure :around #'+jd/eglot-ensure-safe-advice)
 
 
 
