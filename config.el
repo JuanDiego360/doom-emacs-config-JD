@@ -97,6 +97,7 @@
 ;; Configuración de doom-modeline (se ejecuta cuando el paquete carga)
 (after! doom-modeline
   ;; ── Hora ──
+  (setq display-time-24hr-format t)
   (display-time-mode 1)
   (setq doom-modeline-time t
         doom-modeline-time-icon t
