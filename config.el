@@ -396,6 +396,33 @@
 
 (advice-add 'eglot-ensure :around #'+jd/eglot-ensure-safe-advice)
 
+;; ── Activación automática de entornos virtuales (venv / uv) ──
+(defun +jd/python-auto-venv-h ()
+  "Detecta automáticamente si hay un entorno virtual (carpeta con pyvenv.cfg)
+en la raíz del proyecto y lo activa antes de que inicie el autocompletado."
+  (when (derived-mode-p 'python-mode)
+    (require 'pyvenv)
+    (let* ((proj (project-current))
+           (proj-root (if proj (project-root proj) default-directory))
+           (venv-path nil))
+      ;; Buscar un subdirectorio inmediato en la raíz que contenga 'pyvenv.cfg'
+      (when (file-directory-p proj-root)
+        (let ((files (directory-files proj-root t)))
+          (dolist (file files)
+            (let ((name (file-name-nondirectory file)))
+              (when (and (not (member name '("." "..")))
+                         (file-directory-p file)
+                         (file-exists-p (expand-file-name "pyvenv.cfg" file)))
+                (setq venv-path file))))))
+      ;; Si encontramos un entorno virtual, lo activamos
+      (when venv-path
+        (unless (and (boundp 'pyvenv-virtual-env-name)
+                     (string-equal pyvenv-virtual-env-name venv-path))
+          (pyvenv-activate venv-path)
+          (message "LSP/Emacs: Entorno virtual activo -> %s" venv-path))))))
+
+(add-hook 'python-mode-hook #'+jd/python-auto-venv-h)
+
 
 
 
