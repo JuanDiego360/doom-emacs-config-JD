@@ -428,21 +428,29 @@ en la raíz del proyecto y lo activa antes de que inicie el autocompletado."
 ;; para evitar alertas ruidosas de librerías de terceros (como numpy, matplotlib, etc.)
 (setq-default eglot-workspace-configuration
               '(:basedpyright (:analysis (:typeCheckingMode "standard"
-                                          :diagnosticSeverityOverrides (:reportMissingTypeStubs "none"
-                                                                        :reportUnknownMemberType "none"
-                                                                        :reportUnknownVariableType "none"
-                                                                        :reportUnknownArgumentType "none"
-                                                                        :reportUnknownParameterType "none"
-                                                                        :reportAttributeAccessIssue "none"
-                                                                        :reportUnusedCallResult "none")))
+                                          :reportMissingTypeStubs "none"
+                                          :reportUnknownMemberType "none"
+                                          :reportUnknownVariableType "none"
+                                          :reportUnknownArgumentType "none"
+                                          :reportUnknownParameterType "none"
+                                          :reportAttributeAccessIssue "none"
+                                          :reportUnusedCallResult "none"))
                 :pyright (:analysis (:typeCheckingMode "standard"
-                                     :diagnosticSeverityOverrides (:reportMissingTypeStubs "none"
-                                                                   :reportUnknownMemberType "none"
-                                                                   :reportUnknownVariableType "none"
-                                                                   :reportUnknownArgumentType "none"
-                                                                   :reportUnknownParameterType "none"
-                                                                   :reportAttributeAccessIssue "none"
-                                                                   :reportUnusedCallResult "none")))))
+                                     :reportMissingTypeStubs "none"
+                                     :reportUnknownMemberType "none"
+                                     :reportUnknownVariableType "none"
+                                     :reportUnknownArgumentType "none"
+                                     :reportUnknownParameterType "none"
+                                     :reportAttributeAccessIssue "none"
+                                     :reportUnusedCallResult "none"))
+                :python (:analysis (:typeCheckingMode "standard"
+                                    :reportMissingTypeStubs "none"
+                                    :reportUnknownMemberType "none"
+                                    :reportUnknownVariableType "none"
+                                    :reportUnknownArgumentType "none"
+                                    :reportUnknownParameterType "none"
+                                    :reportAttributeAccessIssue "none"
+                                    :reportUnusedCallResult "none"))))
 
 
 
