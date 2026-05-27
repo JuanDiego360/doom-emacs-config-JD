@@ -423,6 +423,15 @@ en la raíz del proyecto y lo activa antes de que inicie el autocompletado."
 
 (add-hook 'python-mode-hook #'+jd/python-auto-venv-h)
 
+;; ── Configuración de Basedpyright y Pyright en Eglot ──
+;; Desactiva los avisos de "missing type stubs" y ajusta el nivel de chequeo a "standard"
+;; para evitar alertas ruidosas de librerías de terceros (como numpy, matplotlib, etc.)
+(setq-default eglot-workspace-configuration
+              '(:basedpyright (:analysis (:typeCheckingMode "standard"
+                                          :diagnosticSeverityOverrides (:reportMissingTypeStubs "none")))
+                :pyright (:analysis (:typeCheckingMode "standard"
+                                     :diagnosticSeverityOverrides (:reportMissingTypeStubs "none")))))
+
 
 
 
