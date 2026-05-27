@@ -312,5 +312,82 @@
 (global-visual-line-mode 1)
 
 
+;; ── Configuración de Corfu al estilo LazyVim (Instantáneo, con iconos y bordes limpios) ──
+(after! corfu
+  (setq corfu-auto-delay 0.02
+        corfu-auto-prefix 1
+        corfu-auto-trigger "./~"
+        corfu-preselect 'first
+        corfu-border-width 1)
+
+  (custom-set-faces!
+    '(corfu-border :background "#3b4261")
+    '(corfu-default :background "#16161e")))
+
+;; CAPF personalizado para completado de rutas robusto en cualquier modo (Python, Julia, LaTeX, etc.)
+(defun +jd/cape-file ()
+  "Versión robusta de `cape-file' que funciona en cualquier major-mode sin importar la tabla de sintaxis."
+  (interactive)
+  (let* ((orig-bounds (symbol-function 'cape--bounds))
+         (new-bounds (lambda (thing)
+                       (let ((bounds (funcall orig-bounds thing)))
+                         (if (and bounds (> (cdr bounds) (car bounds)))
+                             bounds
+                           (save-excursion
+                             (let ((end (point)))
+                               (skip-chars-backward "^ \t\n\"'")
+                               (cons (point) end)))))))
+         (res nil))
+    (fset 'cape--bounds new-bounds)
+    (unwind-protect
+        (setq res (cape-file))
+      (fset 'cape--bounds orig-bounds))
+    res))
+
+;; Ganchos seguros para completado LSP
+(defun +jd/safe-eglot-capf ()
+  "Ejecuta el completado de Eglot de forma segura para evitar errores en Corfu."
+  (condition-case err
+      (eglot-completion-at-point)
+    (error
+     (message "Eglot completion error: %s" (error-message-string err))
+     nil)))
+
+(defun +jd/safe-lsp-capf ()
+  "Ejecuta el completado de lsp-mode de forma segura para evitar errores en Corfu."
+  (condition-case err
+      (lsp-completion-at-point)
+    (error
+     (message "LSP completion error: %s" (error-message-string err))
+     nil)))
+
+;; Habilitar completado de archivos en todos los buffers de programación, texto y configuración
+(add-hook! '(prog-mode-hook text-mode-hook conf-mode-hook)
+  (defun +corfu-add-cape-file-h ()
+    (add-hook 'completion-at-point-functions #'+jd/cape-file -10 t)))
+
+;; Unificar completado de LSP (Eglot/LSP-mode) con completado de archivos y palabras locales (dabbrev)
+(defun +jd/eglot-capf-setup ()
+  (when eglot-managed-mode
+    (require 'cape)
+    (setq-local completion-at-point-functions
+                (list (cape-capf-super
+                       #'+jd/safe-eglot-capf
+                       #'+jd/cape-file
+                       #'cape-dabbrev)))))
+
+(defun +jd/lsp-capf-setup ()
+  (when (bound-and-true-p lsp-mode)
+    (require 'cape)
+    (setq-local completion-at-point-functions
+                (list (cape-capf-super
+                       #'+jd/safe-lsp-capf
+                       #'+jd/cape-file
+                       #'cape-dabbrev)))))
+
+(add-hook 'eglot-managed-mode-hook #'+jd/eglot-capf-setup)
+(add-hook 'lsp-managed-mode-hook #'+jd/lsp-capf-setup)
+
+
 
 
