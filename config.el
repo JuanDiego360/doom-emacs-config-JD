@@ -453,6 +453,22 @@ en la raíz del proyecto y lo activa antes de que inicie el autocompletado."
                 :pyright (:analysis ,+jd/basedpyright-analysis-settings)
                 :python (:analysis ,+jd/basedpyright-analysis-settings)))
 
+;; ── Optimizaciones de Rendimiento y LSP ──
+(setq read-process-output-max (* 1024 1024)    ; 1MB
+      gc-cons-threshold (* 100 1024 1024)      ; 100MB
+      lsp-idle-delay 0.5
+      lsp-log-io nil)
+
+(after! eglot
+  ;; Desactivar logging de eventos en eglot para evitar sobrecarga de CPU y memoria
+  (setf (plist-get eglot-events-buffer-config :size) 0))
+
+;; ── Integración con emacs-lsp-booster ──
+(use-package! eglot-booster
+  :after eglot
+  :config
+  (eglot-booster-mode 1))
+
 
 
 

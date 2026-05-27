@@ -55,3 +55,6 @@
 
 (package! valign)
 (package! mixed-pitch)
+
+(package! eglot-booster
+  :recipe (:host github :repo "jdtsmith/eglot-booster"))
