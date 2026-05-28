@@ -154,29 +154,29 @@
   '(completions-common-part :foreground "#51afef" :background nil :weight bold)
   '(completions-first-difference :foreground "#c678dd" :background nil :weight bold))
 
-;; Integration with Windows Clipboard in WSL terminal
-(when (and (eq system-type 'gnu/linux)
-           (string-match-p "microsoft" (downcase (shell-command-to-string "uname -a")))
-           (not (display-graphic-p)))
-  (require 'subr-x)
-  (defun wsl-copy (text)
-    (when (and text (not (string-empty-p text)))
-      (let ((coding-system-for-write 'utf-8))
-        (with-temp-buffer
-          (insert text)
-          (call-process-region (point-min) (point-max)
-                               "/init" nil nil nil
-                               "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
-                               "-NoProfile" "-Command" "Set-Clipboard -Value ($input | Out-String).TrimEnd()")))))
-  (defun wsl-paste ()
-    (let ((coding-system-for-read 'utf-8))
-      (with-temp-buffer
-        (call-process "/init" nil t nil
-                      "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
-                      "-NoProfile" "-Command" "Get-Clipboard")
-        (string-trim-right (buffer-string)))))
-  (setq interprogram-cut-function 'wsl-copy
-        interprogram-paste-function 'wsl-paste))
+;; Integration with Windows Clipboard in WSL terminal (Commented out because it fails with 'Exec format error')
+;; (when (and (eq system-type 'gnu/linux)
+;;            (string-match-p "microsoft" (downcase (shell-command-to-string "uname -a")))
+;;            (not (display-graphic-p)))
+;;   (require 'subr-x)
+;;   (defun wsl-copy (text)
+;;     (when (and text (not (string-empty-p text)))
+;;       (let ((coding-system-for-write 'utf-8))
+;;         (with-temp-buffer
+;;           (insert text)
+;;           (call-process-region (point-min) (point-max)
+;;                                "/init" nil nil nil
+;;                                "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
+;;                                "-NoProfile" "-Command" "Set-Clipboard -Value ($input | Out-String).TrimEnd()")))))
+;;   (defun wsl-paste ()
+;;     (let ((coding-system-for-read 'utf-8))
+;;       (with-temp-buffer
+;;         (call-process "/init" nil t nil
+;;                       "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
+;;                       "-NoProfile" "-Command" "Get-Clipboard")
+;;         (string-trim-right (buffer-string)))))
+;;   (setq interprogram-cut-function 'wsl-copy
+;;         interprogram-paste-function 'wsl-paste))
 
 ;; Disable eglot-booster if emacs-lsp-booster is not installed
 (after! eglot-booster
