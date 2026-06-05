@@ -154,7 +154,17 @@
   '(completions-common-part :foreground "#51afef" :background nil :weight bold)
   '(completions-first-difference :foreground "#c678dd" :background nil :weight bold)
   '(vertico-current :background "#3e4b59" :foreground "#ffffff" :weight bold)
-  '(corfu-current :background "#3e4b59" :foreground "#ffffff" :weight bold))
+  '(corfu-current :background "#3e4b59" :foreground "#ffffff" :weight bold)
+  '(mode-line :background "#192026" :foreground "#bfbdb6" :inverse-video nil)
+  '(mode-line-inactive :background "#0f1419" :foreground "#5c6773" :inverse-video nil)
+  '(solaire-mode-line-face :background "#192026" :foreground "#bfbdb6" :inverse-video nil)
+  '(solaire-mode-line-inactive-face :background "#0f1419" :foreground "#5c6773" :inverse-video nil)
+  '(doom-modeline-project-dir :foreground "#bfbdb6" :weight normal)
+  '(doom-modeline-buffer-path :foreground "#bfbdb6" :weight normal)
+  '(doom-modeline-buffer-file :foreground "#bfbdb6" :weight normal)
+  '(doom-modeline-buffer-modified :foreground "#bfbdb6" :weight normal)
+  '(doom-modeline-vcs :foreground "#bfbdb6" :weight normal)
+  '(doom-modeline-time :foreground "#bfbdb6" :weight normal))
 
 ;; Integration with Windows Clipboard in WSL terminal (Commented out because it fails with 'Exec format error')
 ;; (when (and (eq system-type 'gnu/linux)
@@ -421,6 +431,10 @@ en la raíz del proyecto y lo activa antes de que inicie el autocompletado."
 
 ;; ── Configuración de Vterm con libvterm vendada para evitar crashes ABI ──
 (setq vterm-module-cmake-args "-DUSE_SYSTEM_LIBVTERM=no")
+
+;; ── Desactivar el resaltado de la línea actual (hl-line-mode) ──
+(remove-hook 'doom-first-buffer-hook #'global-hl-line-mode)
+
 
 
 
