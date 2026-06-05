@@ -152,7 +152,9 @@
   '(orderless-match-face-2 :foreground "#98be65" :background nil :weight bold)
   '(orderless-match-face-3 :foreground "#ecbe7b" :background nil :weight bold)
   '(completions-common-part :foreground "#51afef" :background nil :weight bold)
-  '(completions-first-difference :foreground "#c678dd" :background nil :weight bold))
+  '(completions-first-difference :foreground "#c678dd" :background nil :weight bold)
+  '(vertico-current :background "#3e4b59" :foreground "#ffffff" :weight bold)
+  '(corfu-current :background "#3e4b59" :foreground "#ffffff" :weight bold))
 
 ;; Integration with Windows Clipboard in WSL terminal (Commented out because it fails with 'Exec format error')
 ;; (when (and (eq system-type 'gnu/linux)
