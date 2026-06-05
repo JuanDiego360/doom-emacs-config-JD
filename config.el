@@ -283,21 +283,19 @@
 (defun +jd/cape-file ()
   "Versión robusta de `cape-file' que funciona en cualquier major-mode sin importar la tabla de sintaxis."
   (interactive)
-  (let* ((orig-bounds (symbol-function 'cape--bounds))
-         (new-bounds (lambda (thing)
-                       (let ((bounds (funcall orig-bounds thing)))
-                         (if (and bounds (> (cdr bounds) (car bounds)))
-                             bounds
-                           (save-excursion
-                             (let ((end (point)))
-                               (skip-chars-backward "^ \t\n\"'")
-                               (cons (point) end)))))))
-         (res nil))
-    (fset 'cape--bounds new-bounds)
-    (unwind-protect
-        (setq res (cape-file))
-      (fset 'cape--bounds orig-bounds))
-    res))
+  (require 'cl-lib)
+  (require 'cape)
+  (cl-letf* ((orig-bounds (symbol-function 'cape--bounds))
+             ((symbol-function 'cape--bounds)
+              (lambda (thing)
+                (let ((bounds (funcall orig-bounds thing)))
+                  (if (and bounds (> (cdr bounds) (car bounds)))
+                      bounds
+                    (save-excursion
+                      (let ((end (point)))
+                        (skip-chars-backward "^ \t\n\"'")
+                        (cons (point) end))))))))
+    (cape-file)))
 
 ;; Ganchos seguros para completado LSP
 (defun +jd/safe-eglot-capf ()
@@ -323,22 +321,20 @@
 
 ;; Unificar completado de LSP (Eglot/LSP-mode) con completado de archivos y palabras locales (dabbrev)
 (defun +jd/eglot-capf-setup ()
-  (when eglot-managed-mode
+  (when (bound-and-true-p eglot--managed-mode)
     (require 'cape)
     (setq-local completion-at-point-functions
-                (list (cape-capf-super
-                       #'+jd/safe-eglot-capf
-                       #'+jd/cape-file
-                       #'cape-dabbrev)))))
+                (list #'+jd/safe-eglot-capf
+                      #'+jd/cape-file
+                      #'cape-dabbrev))))
 
 (defun +jd/lsp-capf-setup ()
   (when (bound-and-true-p lsp-mode)
     (require 'cape)
     (setq-local completion-at-point-functions
-                (list (cape-capf-super
-                       #'+jd/safe-lsp-capf
-                       #'+jd/cape-file
-                       #'cape-dabbrev)))))
+                (list #'+jd/safe-lsp-capf
+                      #'+jd/cape-file
+                      #'cape-dabbrev))))
 
 (add-hook 'eglot-managed-mode-hook #'+jd/eglot-capf-setup)
 (add-hook 'lsp-managed-mode-hook #'+jd/lsp-capf-setup)
