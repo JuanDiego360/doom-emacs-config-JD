@@ -32,7 +32,7 @@
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
-(setq doom-theme 'doom-tokyo-night)
+(setq doom-theme 'doom-ayu-dark)
 
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relative line numbers, set this to `relative'.
@@ -330,6 +330,96 @@
 
 (add-hook 'eglot-managed-mode-hook #'+jd/eglot-capf-setup)
 (add-hook 'lsp-managed-mode-hook #'+jd/lsp-capf-setup)
+
+;; Evitar que Eglot intente autoiniciar si el archivo está en la raíz de la carpeta Home (~/)
+;; ya que Basedpyright intentará escanear de forma recursiva toda la carpeta Home y congelará Emacs.
+(defun +jd/eglot-ensure-safe-advice (orig-fun &rest args)
+  "Prevent eglot-ensure from running if the project root is the home directory."
+  (let* ((proj (project-current))
+         (proj-root (if proj (project-root proj) default-directory)))
+    (unless (string-equal (directory-file-name (expand-file-name proj-root))
+                          (directory-file-name (expand-file-name "~/")))
+      (apply orig-fun args))))
+
+(advice-add 'eglot-ensure :around #'+jd/eglot-ensure-safe-advice)
+
+;; ── Activación automática de entornos virtuales (venv / uv) ──
+(defun +jd/python-auto-venv-h ()
+  "Detecta automáticamente si hay un entorno virtual (carpeta con pyvenv.cfg)
+en la raíz del proyecto y lo activa antes de que inicie el autocompletado."
+  (when (derived-mode-p 'python-mode)
+    (require 'pyvenv)
+    (let* ((proj (project-current))
+           (proj-root (if proj (project-root proj) default-directory))
+           (venv-path nil))
+      ;; Buscar un subdirectorio inmediato en la raíz que contenga 'pyvenv.cfg'
+      (when (file-directory-p proj-root)
+        (let ((files (directory-files proj-root t)))
+          (dolist (file files)
+            (let ((name (file-name-nondirectory file)))
+              (when (and (not (member name '("." "..")))
+                         (file-directory-p file)
+                         (file-exists-p (expand-file-name "pyvenv.cfg" file)))
+                (setq venv-path file))))))
+      ;; Si encontramos un entorno virtual, lo activamos
+      (when venv-path
+        (unless (and (boundp 'pyvenv-virtual-env-name)
+                     (string-equal pyvenv-virtual-env-name venv-path))
+          (pyvenv-activate venv-path)
+          (message "LSP/Emacs: Entorno virtual activo -> %s" venv-path))))))
+
+(add-hook 'python-mode-hook #'+jd/python-auto-venv-h)
+
+;; ── Configuración de Basedpyright y Pyright en Eglot ──
+;; Desactiva los avisos de "missing type stubs" y ajusta el nivel de chequeo a "standard"
+;; para evitar alertas ruidosas de librerías de terceros (como numpy, matplotlib, etc.)
+(defvar +jd/basedpyright-analysis-settings
+  '(:typeCheckingMode "off"
+    :reportMissingTypeStubs "none"
+    :reportUnknownMemberType "none"
+    :reportUnknownVariableType "none"
+    :reportUnknownArgumentType "none"
+    :reportUnknownParameterType "none"
+    :reportAttributeAccessIssue "none"
+    :reportUnusedCallResult "none"
+    :diagnosticSeverityOverrides (:reportMissingTypeStubs "none"
+                                  :reportUnknownMemberType "none"
+                                  :reportUnknownVariableType "none"
+                                  :reportUnknownArgumentType "none"
+                                  :reportUnknownParameterType "none"
+                                  :reportAttributeAccessIssue "none"
+                                  :reportUnusedCallResult "none"))
+  "Common Basedpyright/Pyright analysis settings.")
+
+(setq-default eglot-workspace-configuration
+              `(:basedpyright.analysis ,+jd/basedpyright-analysis-settings
+                :python.analysis ,+jd/basedpyright-analysis-settings
+                :pyright.analysis ,+jd/basedpyright-analysis-settings
+                :basedpyright (:analysis ,+jd/basedpyright-analysis-settings)
+                :pyright (:analysis ,+jd/basedpyright-analysis-settings)
+                :python (:analysis ,+jd/basedpyright-analysis-settings)))
+
+;; ── Optimizaciones de Rendimiento y LSP ──
+(setq read-process-output-max (* 1024 1024)    ; 1MB
+      gc-cons-threshold (* 100 1024 1024)      ; 100MB
+      lsp-idle-delay 0.5
+      lsp-log-io nil)
+
+(after! eglot
+  ;; Desactivar logging de eventos en eglot para evitar sobrecarga de CPU y memoria
+  (setf (plist-get eglot-events-buffer-config :size) 0)
+  ;; Desactivar inlay hints (anotaciones virtuales de tipo como NDArray[float64] dentro del código)
+  (add-to-list 'eglot-ignored-server-capabilities :inlayHintProvider))
+
+;; ── Integración con emacs-lsp-booster ──
+(use-package! eglot-booster
+  :after eglot
+  :config
+  (eglot-booster-mode 1))
+
+;; ── Configuración de Vterm con libvterm vendada para evitar crashes ABI ──
+(setq vterm-module-cmake-args "-DUSE_SYSTEM_LIBVTERM=no")
+
 
 
 
