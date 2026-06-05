@@ -164,7 +164,12 @@
   '(doom-modeline-buffer-file :foreground "#bfbdb6" :weight normal)
   '(doom-modeline-buffer-modified :foreground "#bfbdb6" :weight normal)
   '(doom-modeline-vcs :foreground "#bfbdb6" :weight normal)
-  '(doom-modeline-time :foreground "#bfbdb6" :weight normal))
+  '(doom-modeline-time :foreground "#bfbdb6" :weight normal)
+  '(line-number :foreground "#5c6773" :background nil)
+  '(line-number-current-line :foreground "#e6b450" :background nil :weight bold)
+  '(solaire-line-number-face :foreground "#5c6773" :background nil)
+  '(hl-line :background nil)
+  '(solaire-hl-line-face :background nil))
 
 ;; Integration with Windows Clipboard in WSL terminal (Commented out because it fails with 'Exec format error')
 ;; (when (and (eq system-type 'gnu/linux)
