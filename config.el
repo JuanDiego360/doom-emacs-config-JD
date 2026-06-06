@@ -307,6 +307,12 @@
        0 'font-lock-warning-face prepend))))
 
 
+;; ── Modo para archivos QML ──
+;; QML es un lenguaje similar a JavaScript para interfaces Qt.
+;; Lo asociamos a js-mode (hereda de prog-mode, así obtiene números de línea, etc.)
+(add-to-list 'auto-mode-alist '("\\.qml\\'" . js-mode))
+
+
 ;; ── Ajuste de línea automático (Evitar Scroll Horizontal) ──
 
 ;; Activar el ajuste de línea automático (soft wrap) de forma global
