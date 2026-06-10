@@ -169,7 +169,8 @@
   '(line-number-current-line :foreground "#e6b450" :background nil :weight bold)
   '(solaire-line-number-face :foreground "#5c6773" :background nil)
   '(hl-line :background nil)
-  '(solaire-hl-line-face :background nil))
+  '(solaire-hl-line-face :background nil)
+  '(region :background "#3c5880" :foreground nil :extend t))
 
 ;; Integration with Windows Clipboard in WSL terminal (Commented out because it fails with 'Exec format error')
 ;; (when (and (eq system-type 'gnu/linux)
