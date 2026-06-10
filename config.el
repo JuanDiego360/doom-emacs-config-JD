@@ -436,10 +436,71 @@ en la raíz del proyecto y lo activa antes de que inicie el autocompletado."
 ;; ── Desactivar el resaltado de la línea actual (hl-line-mode) ──
 (remove-hook 'doom-first-buffer-hook #'global-hl-line-mode)
 
+;; ── Treemacs Open Files Highlighting ──
+(defface my-treemacs-open-file-face
+  '((t :foreground "#BA5B0B" :weight bold))
+  "Face utilizada para resaltar los archivos abiertos en Treemacs."
+  :group 'treemacs)
 
+(defun my-treemacs-highlight-open-files-in-current-buffer (&rest _args)
+  "Resalta los archivos en Treemacs que coincidan con buffers abiertos."
+  (when (derived-mode-p 'treemacs-mode)
+    (with-silent-modifications
+      (let ((inhibit-read-only t)
+            (open-files (make-hash-table :test 'equal)))
+        ;; Registrar todos los archivos con buffers activos
+        (dolist (buf (buffer-list))
+          (let ((file (buffer-file-name buf)))
+            (when (and file (file-exists-p file))
+              (puthash (expand-file-name file) t open-files))))
+        
+        ;; Limpiar resaltados anteriores
+        (remove-overlays (point-min) (point-max) 'my-treemacs-open-file t)
+        
+        ;; Recorrer el árbol línea por línea
+        (save-excursion
+          (goto-char (point-min))
+          (while (not (eobp))
+            (save-excursion
+              ;; Ir al final de la línea para asegurar estar sobre el botón del archivo
+              (goto-char (line-end-position))
+              (when (> (point) (line-beginning-position))
+                (backward-char 1))
+              (let* ((node (treemacs-node-at-point))
+                     (path (and node (treemacs-button-get node :path))))
+                (when (and path 
+                           (not (file-directory-p path))
+                           (gethash (expand-file-name path) open-files))
+                  ;; Aplicar el color solo al texto del nombre del archivo
+                  (let* ((beg (or (and (fboundp 'button-start) (button-start node))
+                                  (line-beginning-position)))
+                         (end (or (and (fboundp 'button-end) (button-end node))
+                                  (line-end-position)))
+                         (ov (make-overlay beg end)))
+                    (overlay-put ov 'my-treemacs-open-file t)
+                    (overlay-put ov 'face 'my-treemacs-open-file-face)))))
+            (forward-line 1)))))))
 
+(defun my-treemacs-highlight-open-files-all-buffers (&rest _args)
+  "Aplica el resaltado en todos los buffers activos de Treemacs."
+  (dolist (buf (buffer-list))
+    (with-current-buffer buf
+      (when (derived-mode-p 'treemacs-mode)
+        (my-treemacs-highlight-open-files-in-current-buffer)))))
 
+(defun my-treemacs-highlight-open-files-trigger ()
+  "Dispara el resaltado si hay alguna ventana de Treemacs visible."
+  (let ((visible nil))
+    (walk-windows (lambda (w)
+                    (when (with-current-buffer (window-buffer w)
+                            (derived-mode-p 'treemacs-mode))
+                      (setq visible t)))
+                  nil t)
+    (when visible
+      (my-treemacs-highlight-open-files-all-buffers))))
 
-
-
-
+(with-eval-after-load 'treemacs
+  ;; Actualizar después de que Treemacs refresque su árbol
+  (add-hook 'treemacs-post-refresh-hook #'my-treemacs-highlight-open-files-all-buffers)
+  ;; Actualizar cuando cambies, abras o cierres buffers en Emacs
+  (add-hook 'buffer-list-update-hook #'my-treemacs-highlight-open-files-trigger))
