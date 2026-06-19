@@ -501,6 +501,8 @@ en la raíz del proyecto y lo activa antes de que inicie el autocompletado."
       (my-treemacs-highlight-open-files-all-buffers))))
 
 (with-eval-after-load 'treemacs
+  ;; Activar el auto-refresco (monitoreo de cambios en archivos/directorios)
+  (treemacs-filewatch-mode t)
   ;; Actualizar después de que Treemacs refresque su árbol
   (add-hook 'treemacs-post-refresh-hook #'my-treemacs-highlight-open-files-all-buffers)
   ;; Actualizar cuando cambies, abras o cierres buffers en Emacs
