@@ -9,6 +9,13 @@
 ;; (setq user-full-name "John Doe"
 ;;       user-mail-address "john@doe.com")
 
+;; ── Rutas del sistema para Windows (MSYS2 / GCC y Node.js / NPM) ──
+(when (eq system-type 'windows-nt)
+  (add-to-list 'exec-path "C:/msys64/mingw64/bin")
+  (add-to-list 'exec-path "C:/Users/Usuario/AppData/Roaming/npm")
+  (setenv "PATH" (concat "C:\\msys64\\mingw64\\bin;C:\\Users\\Usuario\\AppData\\Roaming\\npm;" (getenv "PATH"))))
+
+
 ;; Doom exposes five (optional) variables for controlling fonts in Doom:
 ;;
 ;; - `doom-font' -- the primary font to use
