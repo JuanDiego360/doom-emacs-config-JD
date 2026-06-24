@@ -9,11 +9,16 @@
 ;; (setq user-full-name "John Doe"
 ;;       user-mail-address "john@doe.com")
 
-;; ── Rutas del sistema para Windows (MSYS2 / GCC y Node.js / NPM) ──
+;; ── Rutas del sistema para Windows (MSYS2 / GCC, Node.js / NPM, y Git) ──
 (when (eq system-type 'windows-nt)
   (add-to-list 'exec-path "C:/msys64/mingw64/bin")
+  (add-to-list 'exec-path "C:/msys64/usr/bin")
   (add-to-list 'exec-path "C:/Users/Usuario/AppData/Roaming/npm")
-  (setenv "PATH" (concat "C:\\msys64\\mingw64\\bin;C:\\Users\\Usuario\\AppData\\Roaming\\npm;" (getenv "PATH"))))
+  (add-to-list 'exec-path "C:/Program Files/Git/cmd")
+  (add-to-list 'exec-path "C:/Program Files/Git/bin")
+  (add-to-list 'exec-path "C:/Program Files/Git/usr/bin")
+  (setenv "PATH" (concat "C:\\msys64\\mingw64\\bin;C:\\msys64\\usr\\bin;C:\\Users\\Usuario\\AppData\\Roaming\\npm;C:\\Program Files\\Git\\cmd;C:\\Program Files\\Git\\bin;C:\\Program Files\\Git\\usr\\bin;" (getenv "PATH")))
+  (setq diff-hl-update-async nil))
 
 
 ;; Doom exposes five (optional) variables for controlling fonts in Doom:
