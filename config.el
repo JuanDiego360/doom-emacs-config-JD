@@ -136,11 +136,23 @@
       (when (> (+ added modified deleted) 0)
         (concat
          (when (> added 0)
-           (propertize (format "   %d" added) 'face (if (facep 'diff-hl-insert) 'diff-hl-insert 'success)))
+           (concat " "
+                   (if (fboundp 'nerd-icons-octicon)
+                       (nerd-icons-octicon "nf-oct-diff_added" :face (if (facep 'diff-hl-insert) 'diff-hl-insert 'success))
+                     (propertize "+" 'face (if (facep 'diff-hl-insert) 'diff-hl-insert 'success)))
+                   (format " %d" added)))
          (when (> modified 0)
-           (propertize (format "   %d" modified) 'face (if (facep 'diff-hl-change) 'diff-hl-change 'warning)))
+           (concat " "
+                   (if (fboundp 'nerd-icons-octicon)
+                       (nerd-icons-octicon "nf-oct-diff_modified" :face (if (facep 'diff-hl-change) 'diff-hl-change 'warning))
+                     (propertize "~" 'face (if (facep 'diff-hl-change) 'diff-hl-change 'warning)))
+                   (format " %d" modified)))
          (when (> deleted 0)
-           (propertize (format "   %d" deleted) 'face (if (facep 'diff-hl-delete) 'diff-hl-delete 'error)))))))
+           (concat " "
+                   (if (fboundp 'nerd-icons-octicon)
+                       (nerd-icons-octicon "nf-oct-diff_removed" :face (if (facep 'diff-hl-delete) 'diff-hl-delete 'error))
+                     (propertize "-" 'face (if (facep 'diff-hl-delete) 'diff-hl-delete 'error)))
+                   (format " %d" deleted)))))))
 
   (doom-modeline-def-modeline 'main
     '(eldoc bar window-state workspace-name window-number modals matches follow buffer-info remote-host buffer-position word-count parrot selection-info)
