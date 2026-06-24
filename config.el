@@ -172,7 +172,7 @@
   '(solaire-hl-line-face :background nil)
   '(region :background "#3c5880" :foreground nil :extend t))
 
-;; Integration with Windows Clipboard in WSL terminal (Commented out because it fails with 'Exec format error')
+;; ── Integración con Windows Clipboard en WSL terminal (Commented out because it fails with 'Exec format error')
 ;; (when (and (eq system-type 'gnu/linux)
 ;;            (string-match-p "microsoft" (downcase (shell-command-to-string "uname -a")))
 ;;            (not (display-graphic-p)))
@@ -196,10 +196,41 @@
 ;;   (setq interprogram-cut-function 'wsl-copy
 ;;         interprogram-paste-function 'wsl-paste))
 
-;; Disable eglot-booster if emacs-lsp-booster is not installed
-(after! eglot-booster
-  (unless (executable-find "emacs-lsp-booster")
-    (eglot-booster-mode -1)))
+;; ── Shortcuts para tests Java con jdtls (vía Eglot) ──
+;; jdtls expone code actions cuando estás sobre un método @Test.
+;; Las opciones reales para correr tests con jdtls + Eglot:
+;;   1. M-x eglot-code-actions → te lista "Run Test" / "Run Test in
+;;      Context" / "Debug Test". Las corrés con Enter.
+;;   2. Hay un code action específica llamada "Java" → "Run Test"
+;;      que aparece en el margen del gutter (icono ▶ verde).
+;;   3. Si tenés internet y jdtls cargado, Eglot puede invocar la
+;;      acción vía `M-x lsp-execute-code-action`.
+;;
+;; Atajos de Doom (después de `doom sync`):
+;;   SPC m t s  → corre NanoIdSmoke (offline, no requiere jdtls)
+;;                Equivale a: java -cp target/classes:target/test-classes
+;;                co.edu.unipamplona.ciadti.btaa.util.NanoIdSmoke
+;;
+;; El smoke valida la misma lógica que el JUnit test, sin requerir
+;; la dep de junit-jupiter (que tu Maven offline no puede descargar).
+
+(defvar +jd/java-btaa-root "/mnt/d/proyectoCIADTI/btaa"
+  "Raíz del proyecto btaa. Usado por los atajos de tests.")
+
+(defun +jd/java-run-smoke ()
+  "Corre el NanoIdSmoke (main ejecutable) en el buffer de compilación.
+   Funciona offline sin requerir jdtls ni JUnit Platform."
+  (interactive)
+  (let ((default-directory +jd/java-btaa-root))
+    (compile (concat "cd " +jd/java-btaa-root
+                     " && java -cp target/classes:target/test-classes "
+                     "co.edu.unipamplona.ciadti.btaa.util.NanoIdSmoke"))))
+
+(map! :map java-mode-map
+      :localleader
+      ;; Leader local (SPC m en modo Java) + t s → corre el smoke
+      (:prefix ("t" . "test")
+        :desc "Run NanoIdSmoke (offline)" "s" #'+jd/java-run-smoke))
 
 ;; Disable flyspell in git commit buffers if no spell checker is installed
 (after! flyspell
@@ -429,7 +460,8 @@ en la raíz del proyecto y lo activa antes de que inicie el autocompletado."
 (use-package! eglot-booster
   :after eglot
   :config
-  (eglot-booster-mode 1))
+  (when (executable-find "emacs-lsp-booster")
+    (eglot-booster-mode 1)))
 
 ;; ── Configuración de Vterm con libvterm vendada para evitar crashes ABI ──
 (setq vterm-module-cmake-args "-DUSE_SYSTEM_LIBVTERM=no")
