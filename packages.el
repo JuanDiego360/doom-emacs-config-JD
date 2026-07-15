@@ -56,3 +56,6 @@
 (package! eglot-booster
   :recipe (:host github :repo "jdtsmith/eglot-booster"))
 
+(unpin! org-roam)
+(package! org-roam-ui)
+

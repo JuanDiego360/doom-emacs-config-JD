@@ -563,3 +563,21 @@ en la raíz del proyecto y lo activa antes de que inicie el autocompletado."
   (add-hook 'treemacs-post-refresh-hook #'my-treemacs-highlight-open-files-all-buffers)
   ;; Actualizar cuando cambies, abras o cierres buffers en Emacs
   (add-hook 'buffer-list-update-hook #'my-treemacs-highlight-open-files-trigger))
+
+;; ── Configuración de Org-roam ──
+(after! org-roam
+  (setq org-roam-directory "~/org-roam")
+  (setq org-roam-database-connector 'sqlite-builtin))
+
+(use-package! websocket
+  :after org-roam)
+
+(use-package! org-roam-ui
+  :after org-roam
+  :config
+  (setq org-roam-ui-sync-theme t
+        org-roam-ui-follow t
+        org-roam-ui-update-on-save t
+        org-roam-ui-open-on-start t))
+
+
