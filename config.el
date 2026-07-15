@@ -567,7 +567,23 @@ en la raíz del proyecto y lo activa antes de que inicie el autocompletado."
 ;; ── Configuración de Org-roam ──
 (after! org-roam
   (setq org-roam-directory "~/org-roam")
-  (setq org-roam-database-connector 'sqlite-builtin))
+  (setq org-roam-database-connector 'sqlite-builtin)
+
+  ;; Plantillas de captura para crear notas en subcarpetas específicas
+  (setq org-roam-capture-templates
+        '(("d" "Default (Raíz)" plain "%?"
+           :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+           :unnarrowed t)
+          ("b" "Backend" plain "%?"
+           :target (file+head "backend/%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+filetags: :backend:\n")
+           :unnarrowed t)
+          ("f" "Frontend" plain "%?"
+           :target (file+head "frontend/%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+filetags: :frontend:\n")
+           :unnarrowed t)
+          ("g" "General" plain "%?"
+           :target (file+head "general/%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+           :unnarrowed t))))
+
 
 (use-package! websocket
   :after org-roam)
@@ -579,5 +595,36 @@ en la raíz del proyecto y lo activa antes de que inicie el autocompletado."
         org-roam-ui-follow t
         org-roam-ui-update-on-save t
         org-roam-ui-open-on-start t))
+
+;; ── Silenciar Advertencias Molestas (ispell y yasnippet) ──
+(add-to-list 'warning-suppress-types '(ispell))
+(add-to-list 'warning-suppress-log-types '(ispell))
+(after! yasnippet
+  (setq yas-verbosity 1))
+
+;; ── Forzar la activación de diff-hl en Windows ──
+(when (eq system-type 'windows-nt)
+  (add-hook! 'find-file-hook
+    (defun +force-diff-hl-mode-h ()
+      (when (and (buffer-file-name)
+                 (vc-backend (buffer-file-name)))
+        (require 'diff-hl)
+        (diff-hl-mode 1)
+        (diff-hl-update)))))
+
+;; ── Acortar los archivos temporales de diff-hl para evitar el límite de MAX_PATH de Windows ──
+(after! diff-hl
+  (when (eq system-type 'windows-nt)
+    (defun diff-hl-make-temp-file-name (file rev &optional manual)
+      "Return a short hashed temp file name for diff-hl on Windows to avoid MAX_PATH limit."
+      (let* ((hash (sha1 file))
+             (clean-rev (subst-char-in-string ?/ ?_ rev))
+             (suffix (if manual "-manual" "")))
+        (expand-file-name
+         (format "diff-hl-%s%s.~%s" hash suffix clean-rev)
+         temporary-file-directory)))))
+
+
+
 
 
