@@ -624,6 +624,12 @@ en la raíz del proyecto y lo activa antes de que inicie el autocompletado."
          (format "diff-hl-%s%s.~%s" hash suffix clean-rev)
          temporary-file-directory)))))
 
+;; ── Configuración de Git Messenger (SPC g m) ──
+(map! :leader
+      (:prefix ("g" . "git")
+       :desc "Git messenger" "m" #'git-messenger:popup-message))
+
+
 
 
 
