@@ -597,10 +597,13 @@ en la raíz del proyecto y lo activa antes de que inicie el autocompletado."
         org-roam-ui-open-on-start t))
 
 ;; ── Silenciar Advertencias Molestas (ispell y yasnippet) ──
+(require 'warnings)
 (add-to-list 'warning-suppress-types '(ispell))
 (add-to-list 'warning-suppress-log-types '(ispell))
+(setq projectile-warn-on-prefixless-dirconfig-lines nil)
 (after! yasnippet
   (setq yas-verbosity 1))
+
 
 ;; ── Forzar la activación de diff-hl en Windows ──
 (when (eq system-type 'windows-nt)
